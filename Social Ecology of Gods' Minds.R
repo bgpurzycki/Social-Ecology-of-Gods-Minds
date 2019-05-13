@@ -4,24 +4,22 @@
 
 ## Script prepared by Benjamin Grant Purzycki
 ## email: benjamin_purzycki@eva.mpg.de
+## Last updated May 13, 2019
 
 # Install and load packages
 
-libs <- c("AnthroTools" ,"plyr", "psych", "lme4", "brms", "tidyr")
+libs <- c("AnthroTools" ,"plyr", "psych", "lme4", "brms", "tidyr", "GPArotation", "extrafont")
 lapply(libs, require, character.only = TRUE)
 
 # Set working directory
 
-# Replace with appropriate target. In RStudio, select target folder through:
-# Session --> Set Working Directory --> Choose Directory
+setwd("")
 
-setwd("D:/Users/benjamin_purzycki/Dropbox/God's Values Project/Workflow/Social Ecology of Gods' Minds")
-setwd("C:/Users/Benjamin/Dropbox/God's Values Project/Workflow/Social Ecology of Gods' Minds")
+data_CLEAN <- read.csv("data_CLEAN.csv", na = "NA") # Call up and rename data
 
-# Call up and rename data
+exponly <- subset(data_CLEAN, !TG_DV%in%(0)) # Remove people who kept the initial endowment
 
-data_CLEAN <- read.csv("data_CLEAN.csv", na = "NA")
-m <- data.frame(data_CLEAN)
+m <- data.frame(exponly)
 
 ###################################
 ## Recoding Conditions ############
@@ -128,7 +126,7 @@ FL.S <- CalculateSalience(FL, Order = "Order", Subj = "PARTID", CODE = "LIST", G
 SAL <- SalienceByCode(FL.S, CODE = "LIST", Salience = "Salience", Subj = "PARTID", dealWithDoubles = "MAX", GROUPING = NA)
 FLSORT <- SAL[order(-SAL$SmithsS),] 
 FLSORT$n <- FLSORT$SumSalience/FLSORT$MeanSalience
-#View(FLSORT) # Table S1
+# FLSORT[which(FLSORT.g$SmithsS > 0.09),] # Table S1
 
 # By Condition
 
@@ -136,7 +134,7 @@ FL.S.g <- CalculateSalience(FL, Order = "Order", Subj = "PARTID", CODE = "LIST",
 SAL.g <- SalienceByCode(FL.S.g, CODE = "LIST", Salience = "Salience", Subj = "PARTID", dealWithDoubles = "MAX", GROUPING = "CondText")
 FLSORT.g <- SAL.g[order(SAL.g$GROUPING, -SAL.g$SmithsS),] 
 FLSORT.g$n <- FLSORT.g$SumSalience/FLSORT.g$MeanSalience
-#View(FLSORT.g) # Table S2
+# FLSORT.g[which(FLSORT.g$SmithsS > 0.09),] # Table S2
 
 #write.csv(FL.S.g, "FL.S.G.csv")
 
@@ -174,6 +172,7 @@ merged <- exploitation
 merged$X <- NULL
 
 write.csv(merged, "GVPdata.csv") # final working dataset (unstacked)
+GVPdata <- merged
 
 ####################################
 ## In-text descriptive statistics ##
@@ -194,6 +193,82 @@ describeBy(GVPdata$edu, GVPdata$CondText)
 describeBy(GVPdata$income, GVPdata$CondText)
 
 table(GVPdata$CondText, GVPdata$Greed)
+
+####################################
+###### Flower Plot for FL Data #####
+####################################
+
+loadfonts()
+
+# Circle function
+
+circle <- function(xorig, yorig, radius, add, ...){ 
+  x <- seq(-radius, radius, length.out = 1000)
+  y <- sapply(x, function(z) sqrt(radius^2 - z^2))
+  if(add == TRUE){
+    lines(xorig + c(x, rev(x)), c(yorig + y, yorig + rev(-y)),
+          type = "l", ...)
+  } else {
+    plot(xorig + c(x, rev(x)), c(yorig + y, yorig + rev(-y)),
+         type = "l", ...)
+  }
+}
+
+FLSORT[1:8,] #View the data for plot
+
+### Empty plot space (for larger monitors)
+
+plot(c(-110, 110), c(-110, 110), type = "n", xlab = "", ylab = "", axes=FALSE, asp=1, family = "Calibri") 
+
+### Circles!
+### lwd = Smith's S*10
+
+rad <- 30 # predefined radius
+
+circle(0, 0, rad, add = TRUE, col = "black", lwd = 5.7) # domain circle
+
+circle(0, 80, rad, add = TRUE, col = "black", lwd = 5.7) # top circle
+circle(60, 60, rad, add = TRUE, col = "black", lwd = 4.6) # top-right
+circle(80, 0, rad, add = TRUE, col = "black", lwd = 4.4) # right circle
+circle(60, -60, rad, add = TRUE, col = "black", lwd = 2.4) # lower right
+circle(0, -80, rad, add = TRUE, col = "black", lwd = 2.2) # bottom circle
+circle(-60, -60, rad, add = TRUE, col = "black", lwd = 2.0) # lower left
+circle(-80, 0, rad, add = TRUE, col = "black", lwd = 2.0) # left circle
+circle(-60, 60, rad, add = TRUE, col = "black",  lty = 1.8) # top-left
+
+### Connections!
+notch <- 50 # length for vertical and horizontal lines
+nitch <- 21.5 # length for diagonals
+natch <- 38.5 # length for diagonals
+
+segments(0, rad, 0, notch, lwd = 5.7) # top
+segments(nitch, nitch, natch, natch, lwd = 4.6) # upper right
+segments(rad, 0, notch, 0, lwd = 4.4) # right 
+segments(nitch, -nitch, natch, -natch, lwd = 2.4) # lower right
+segments(0, -rad, 0, -notch, lwd = 2.2) # bottom
+segments(-nitch, -nitch, -natch, -natch, lwd = 2) # lower left
+segments(-rad, 0, -notch, 0, lwd = 2) # left
+segments(-nitch, nitch, -natch, natch, lty = 1.8) # upper left
+
+### Labels!
+text(0, 0, labels = "Angers God", font = 2) # center
+text(0, 80, labels = "Dishonesty", font = 2) # top
+text(60, 60, labels = "Murder", font = 2) #2 o'clock
+text(80, 0, labels = "Theft", font = 2) # right
+text(60, -60, labels = "Cheating", font = 2) # 4 o'clock
+text(0, -80, labels = "Greed", font = 2) # bottom
+text(-60, -60, labels = "Hatred", font = 2) # 8 o'clock
+text(-80, 0, labels = "Adultery", font = 2) # 9 o'clock
+text(-60, 60, labels = "Violence", font = 2) # 10 o'clock
+
+text(10, rad+10, labels = "0.57", font = 2) #top
+text(35, 25, labels = "0.46", font = 2) # 2
+text(rad+10, -5, labels = "0.44", font = 2) # left
+text(25, -35, labels = "0.24", font = 2) # 4
+text(-10, -rad-10, labels = "0.22", font = 2) # bottom
+text(-35, -25, labels = "0.20", font = 2) # 7
+text(-rad-10, 5, labels = "0.20", font = 2) # right
+text(-25, 35, labels = "0.18", font = 2) # 10
 
 ####################################
 ## Reliability check of FL scales ##
@@ -220,12 +295,6 @@ text(load, labels = names(greedscale), cex = .7)
 ####### Regression Models for Frequency ##################
 ##########################################################
 
-# Prelim. correlations
-summary(lm(GVPdata$FC~GVPdata$SC))
-confint(lm(GVPdata$FC~GVPdata$SC))
-summary(lm(GVPdata$CONSERVATIVE~GVPdata$RELIGIOSITY))
-confint(lm(GVPdata$CONSERVATIVE~GVPdata$RELIGIOSITY))
-
 # Stack data set
 GVPdata <- read.csv("GVPdata.csv")
 newdata <- gather(GVPdata, item, listed, Dishonesty, Greed, Theft, Selfishness, Love.of.Money, 
@@ -242,7 +311,8 @@ stacked2 <- stacked[!is.na(stacked$bindummy2), ]
 ######## Main-Text Analyses #########
 #####################################
 
-set.seed(7)
+set.seed(7) # set seed here and in model (brms appears to ignore the seed values though, 
+            # so results will likely be slightly different from reported)
 
 priors <- c(set_prior("normal(0,1)", class = "b"),
             set_prior("cauchy(0,2)", class = "sd"))
@@ -262,7 +332,7 @@ GVPdata$CondRecode <- as.factor(GVPdata$CondRecode)
 GVPdata$Sex <- as.factor(GVPdata$Sex)  
 GVPdata$ReligFraim <- as.factor(GVPdata$ReligFraim)  
 
-bfull6 <- brm(formula = Greed ~ CondRecode +  RELIGIOSITY + as.factor(Sex) + Age.C + mo(income) + as.factor(ReligFraim), 
+bfull6 <- brm(formula = Greed ~ CondRecode +  RELIGIOSITY + Sex + Age.C + mo(income) + ReligFraim, 
               data = GVPdata, family = binomial(link = logit),
               prior = priors2,
               warmup = 1000, iter = 2000, chains = 4, control = list(adapt_delta = .99), seed = 7)
@@ -278,7 +348,7 @@ stacked$CondRecode <- as.factor(stacked$CondRecode)
 stacked$Sex <- as.factor(stacked$Sex)  
 stacked$ReligFraim <- as.factor(stacked$ReligFraim) 
 
-lbfull6 <- brm(formula = listed ~ CondRecode +  RELIGIOSITY + as.factor(Sex) + Age.C + mo(income) + as.factor(ReligFraim) + (1 | PARTID), 
+lbfull6 <- brm(formula = listed ~ CondRecode +  RELIGIOSITY + Sex + Age.C + mo(income) + ReligFraim + (1 | PARTID), 
                data = stacked, family = binomial(link = logit),
                prior = priors2,
                warmup = 1000, iter = 2000, chains = 4, control = list(adapt_delta = .99), seed = 7)
@@ -308,10 +378,6 @@ stanplot(lbfull6, type = "hist")
 ###### Supplementary Analyses #######
 #####################################
 
-setwd("D:/Users/benjamin_purzycki/Dropbox/God's Values Project/Workflow")
-setwd("C:/Users/Benjamin/Dropbox/God's Values Project/Workflow")
-
-########################
 ### Robustness checks of greed model
 
 bfull1 <- brm(formula = Greed ~ CondRecode, 
@@ -346,9 +412,10 @@ exp(fixef(bfull3))
 exp(fixef(bfull2))
 exp(fixef(bfull1))
 
-########################
-### Robustness checks of greed set model
-
+############################################
+### Robustness checks of greed set model ###
+############################################
+              
 bfull1s <- brm(formula = listed ~ CondRecode, 
               data = stacked, family = binomial(link = logit),
               prior = priors2,
@@ -380,3 +447,19 @@ exp(fixef(bfull4s))
 exp(fixef(bfull3s))
 exp(fixef(bfull2s))
 exp(fixef(bfull1s))
+              
+#####################################
+##### Supplementary Statistics ######
+#####################################
+
+# How real were Players B?
+mean(GVPdata$Real, na.rm = T)
+sd(GVPdata$Real, na.rm = T)
+hist(GVPdata$Real)
+table(GVPdata$CondText, GVPdata$Real)
+
+# Relationship between fiscal and social conservativism and religiosity
+summary(lm(GVPdata$FC~GVPdata$SC))
+confint(lm(GVPdata$FC~GVPdata$SC))
+summary(lm(GVPdata$CONSERVATIVE~GVPdata$RELIGIOSITY))
+confint(lm(GVPdata$CONSERVATIVE~GVPdata$RELIGIOSITY))
