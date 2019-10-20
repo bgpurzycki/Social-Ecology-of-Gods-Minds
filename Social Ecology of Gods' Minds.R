@@ -4,7 +4,7 @@
 
 ## Script prepared by Benjamin Grant Purzycki
 ## email: benjamin_purzycki@eva.mpg.de
-## Last updated May 13, 2019
+## Last updated October 20. 2019
 
 # Install and load packages
 
@@ -447,7 +447,52 @@ exp(fixef(bfull4s))
 exp(fixef(bfull3s))
 exp(fixef(bfull2s))
 exp(fixef(bfull1s))
-              
+
+###################
+## Odds Ratio Plot
+
+install.packages("extrafont")
+library(extrafont)
+font_import()
+loadfonts(device = "win")       
+fonts()                       
+
+labs <- c("Intercept", "Religious Framing", "Age (centered)", "Sex (1 = male)", "Income", "Religiosity",
+          "Delay Condition", "Split Condition", "Defect Condition")
+
+x <- 1:length(labs)
+OR <- c(0.65, 0.84, 1.02, 1.07, 1.12, 0.96, 1.72, 0.97, 1.56)
+LL <- c(0.24, 0.51, 1.00, 0.62, 0.45, 0.85, 0.90, 0.50, 0.81)
+UL <- c(1.80, 1.39, 1.04, 1.82, 2.67, 1.08, 3.29, 1.90, 2.99)
+LS <- OR-LL
+US <- UL-OR
+tab <- data.frame(cbind(labs, x, OR, LL, UL, LS, US))
+
+x2 <- x-.2
+OR2 <- c(0.39, 0.94, 1.00, 1.08, 0.88, 0.97, 0.95, 1.09, 1.12)
+LL2 <- c(0.27, 0.79, 1.00, 0.90, 0.59, 0.93, 0.73, 0.84, 0.87)
+UL2 <- c(0.56, 1.13, 1.01, 1.30, 1.27, 1.01, 1.21, 1.40, 1.44)
+LS2 <- OR2 - LL2
+US2 <- UL2 - OR2
+tab2 <- data.frame(cbind(labs, x2, OR2, LL2, UL2, LS2, US2))
+
+par(mfrow = c(1, 1), mai = c(1, 2, .5, 0.1)) #bottom, left, top, right
+
+plot(OR, x, pch = 16, xlim = c(0.11, 8), ylim = c(0.5, length(labs)), xlab = NA, 
+     ylab = NA, yaxt = "n", frame.plot = F, log = "x", family = "Calibri")
+arrows(x0 = OR - LS, y0 = x, x1 = US + OR, y1 = x, code = 3, angle = 90, length = 0.05)
+abline(v = 1, lty = 2)
+axis(2, at = x, labels = labs, las = 2, family = "Calibri")
+
+par(new=TRUE)
+
+plot(OR2, x2, pch = 1, xlim = c(0.11, 8), ylim = c(0.5, length(labs)), xlab = NA, 
+     ylab = NA, yaxt = "n", frame.plot = F, log = "x", family = "Calibri")
+arrows(x0 = OR2 - LS2, y0 = x2, x1 = US2 + OR2, y1 = x2, code = 3, angle = 90, length = 0.05, lty = 3)
+
+legend(.12, 7, legend=c("Greed", "Greed Set"),
+       col=c("black", "black"), pch = c(16, 1), lty=c(1,3), cex=0.8)
+
 #####################################
 ##### Supplementary Statistics ######
 #####################################
